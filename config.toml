@@ -1,0 +1,11 @@
+[app]
+name = "Adventurator"
+env = "dev"
+
+[features]
+llm = false
+rules = false
+combat = false
+
+[discord]
+response_timeout_seconds = 3
