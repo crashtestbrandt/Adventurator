@@ -8,10 +8,14 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 
 ---
 
-- [Repo Structure](#repo-structure)
-- [Development](#development)
+* [Overview](#overview)
+* [Prerequisites](#prerequisites) & [Quickstart](#quickstart)
+* [Repo Structure](#repo-structure)
+* [Development](#development)
 
 ---
+
+## Overview
 
 **✨ Features (MVP and beyond)**
 
@@ -36,8 +40,6 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 * Pydantic models, property-based tests for dice & checks.
 * Structured JSON logs, reproducible seeds, feature flags for every subsystem.
 
-⸻
-
 **🏗 Architecture**
 
 * Discord Interactions API → FastAPI app → defer in <3s → enqueue background job.
@@ -46,16 +48,12 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 * Optional LLM → narrates and proposes rulings, never mutates state directly.
 * Workers → long-running tasks: narration, summarization, content ingestion.
 
-⸻
-
 **🔒 Design philosophy**
 
 * AI narrates, rules engine rules. No silent HP drops or fudged rolls.
 * Human-in-the-loop. GM override commands (/gm) and rewind via event sourcing.
 * Defensive defaults. Feature flags, degraded modes (rules-only if LLM/vector DB down).
 * Reproducible. Seeded RNG, append-only logs, golden transcripts for regression tests.
-
-⸻
 
 **🚧 Status**
 
@@ -65,8 +63,6 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 * [ ] Phase 3: Shadow LLM narrator, proposal-only.
 * [ ] Phase 4+: Combat system, content ingestion, GM controls, premium polish.
 
-⸻
-
 **🔜 Roadmap**
 
 * Add /sheet CRUD with strict JSON schema.
@@ -74,7 +70,7 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 * Adventure ingestion pipeline for SRD or custom campaigns.
 * Optional Embedded App for lightweight maps/handouts in voice channels.
 
-——-
+---
 
 ## Prerequisites
 
@@ -108,7 +104,6 @@ make run
 │   └── register_commands.py
 ├── src
 │   └── Adventurator
-│       ├── __init__.py
 │       ├── app.py
 │       ├── config.py
 │       ├── crypto.py
