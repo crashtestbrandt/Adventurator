@@ -72,7 +72,7 @@ flowchart TD
 
   %% === Data ===
   subgraph DATA[Data Layer]
-    DB[(Postgres/SQLite)<br/>campaigns • players • characters • scenes • transcripts]:::data
+    DB[<br/>campaigns • players • characters • scenes • transcripts]:::data
     MIG[Alembic Migrations]:::ops
   end
 
