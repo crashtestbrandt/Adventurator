@@ -54,7 +54,7 @@ flowchart TD
   %% === External ===
   U[Player on Discord]:::ext
   DP[Discord Platform<br/>App Commands & Interactions]:::ext
-  WH[Discord Webhooks API<br/>(Follow-up Messages)]:::ext
+  WH[Discord Webhooks API<br/>Follow-up Messages]:::ext
 
   %% === Network Edge ===
   CF[cloudflared Tunnel<br/>TLS (trusted CA)]:::edge
@@ -64,26 +64,26 @@ flowchart TD
     A[Interactions Endpoint<br/>(/interactions)]
     SIG[Ed25519 Verify<br/>(X-Signature-* Headers)]
     DISP[Command Dispatcher]
-    RESP[Responder<br/>(defer & follow-up)]
+    RESP[Responder<br/>defer & follow-up]
     RULES[Rules Engine (Phase 1)<br/>Dice, Checks, Adv/Dis]
-    CTX[Context Resolver (Phase 2)<br/>Campaign/Player/Scene]
+    CTX[Context Resolver (Phase 2)<br/>Campaign, Player, Scene]
     TRANS[Transcript Logger (Phase 2)]
   end
 
   %% === Data ===
   subgraph DATA[Data Layer]
-    DB[<br/>campaigns • players • characters • scenes • transcripts]:::data
+    DB[(Postgres/SQLite)<br/>campaigns, players, characters, scenes, transcripts]:::data
     MIG[Alembic Migrations]:::ops
   end
 
   %% === Tooling ===
-  REG[scripts/register_commands.py<br/>(Guild command registration)]:::ops
-  LOG[Structured Logs<br/>(structlog/orjson)]:::ops
-  TEST[Tests (pytest & hypothesis)]:::ops
+  REG[scripts/register_commands.py<br/>Guild command registration]:::ops
+  LOG[Structured Logs<br/>structlog/orjson]:::ops
+  TEST[Tests<br/>pytest & hypothesis]:::ops
 
   %% === Flows ===
   U —>|Slash command| DP
-  DP —>|POST /interactions<br/>(signed)| CF
+  DP —>|POST /interactions<br/>signed| CF
   CF —> A
 
   A —> SIG
