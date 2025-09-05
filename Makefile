@@ -18,3 +18,6 @@ type:
 
 format:
 	ruff format src tests
+
+clean:
+	rm -rf .venv

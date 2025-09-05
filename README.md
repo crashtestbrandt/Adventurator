@@ -9,8 +9,8 @@
 ## Quickstart
 
 ```bash
-make uv venv
 cp .env.example .env  # put your actual DISCORD_PUBLIC_KEY
+make dev
 make run
 ```
 
