@@ -1,5 +1,5 @@
 [app]
-name = "dmcord"
+name = "Adventurator"
 env = "dev"
 
 [features]
