@@ -27,3 +27,21 @@ format:
 
 clean:
 	rm -rf .venv
+
+db-up:
+	docker run --rm -d --name advdb -e POSTGRES_PASSWORD=adventurator \
+		-e POSTGRES_USER=adventurator -e POSTGRES_DB=adventurator \
+		-p 5432:5432 postgres:16
+
+alembic-init:
+	alembic init -t async migrations
+
+alembic-rev:
+	alembic revision --autogenerate -m "$(m)"
+
+alembic-up:
+	alembic upgrade head
+
+alembic-down:
+	alembic downgrade -1
+
