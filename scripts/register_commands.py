@@ -2,6 +2,13 @@
 
 import httpx, os, orjson, sys
 
+from dotenv import load_dotenv
+
+load_dotenv()
+APP_ID = os.environ["DISCORD_APP_ID"]
+BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
+GUILD_ID = os.environ.get("DISCORD_GUILD_ID")
+
 APP_ID = os.environ["DISCORD_APP_ID"]
 BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
 GUILD_ID = os.environ["DISCORD_GUILD_ID"]  # Test server
