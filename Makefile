@@ -5,7 +5,7 @@ dev:
 	. .venv/bin/activate && uv pip install -r requirements.txt
 
 run:
-	. .venv/bin/activate && UVICORN_LOG_LEVEL=info uvicorn --app-dir src Adventurator.app:app --reload --port 8000
+	. .venv/bin/activate && UVICORN_LOG_LEVEL=info uvicorn --app-dir src Adventurator.app:app --reload --host 0.0.0.0 --port 8000
 
 
 test:
