@@ -11,6 +11,69 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 
 ---
 
+**✨ Features (MVP and beyond)**
+
+* Discord-first gameplay
+* Slash commands (/roll, /check, /sheet, /act) and interactive components (buttons, modals).
+* Combat threads with initiative order, per-turn locks, and timeouts.
+* Ephemeral prompts for individual player actions.
+* Deterministic rules engine
+* Full SRD 5e dice system (advantage/disadvantage, crits, modifiers).
+* Ability checks, saving throws, AC, HP, conditions.
+* Initiative and turn management with audit logging.
+* Campaign persistence
+* JSON-schema character sheets stored in Postgres (or SQLite for dev).
+* Adventure content as structured “nodes” (locations, NPCs, encounters).
+* Automatic transcripts and neutral session summaries.
+* AI-assisted narration (behind feature flag)
+* LLM proposes DCs and narrates outcomes; Rules Service enforces mechanics.
+* Retrieval-augmented memory: previous sessions, adventure nodes, campaign facts.
+* Configurable tone, verbosity, and house rules.
+* Developer experience
+* Python 3.10+, FastAPI interactions endpoint, Redis for locks/queues.
+* Pydantic models, property-based tests for dice & checks.
+* Structured JSON logs, reproducible seeds, feature flags for every subsystem.
+
+⸻
+
+**🏗 Architecture**
+
+* Discord Interactions API → FastAPI app → defer in <3s → enqueue background job.
+* Rules Service (pure Python functions) → resolves rolls, DCs, initiative, mutations.
+* Database → campaign state, character sheets, transcripts.
+* Optional LLM → narrates and proposes rulings, never mutates state directly.
+* Workers → long-running tasks: narration, summarization, content ingestion.
+
+⸻
+
+**🔒 Design philosophy**
+
+* AI narrates, rules engine rules. No silent HP drops or fudged rolls.
+* Human-in-the-loop. GM override commands (/gm) and rewind via event sourcing.
+* Defensive defaults. Feature flags, degraded modes (rules-only if LLM/vector DB down).
+* Reproducible. Seeded RNG, append-only logs, golden transcripts for regression tests.
+
+⸻
+
+**🚧 Status**
+
+* [X] Phase 0: Verified interactions endpoint, 3s deferral, logging.
+* [X] Phase 1: Deterministic dice + checks, /roll and /check commands.
+* [ ] Phase 2: Persistence (campaigns, characters, transcripts).
+* [ ] Phase 3: Shadow LLM narrator, proposal-only.
+* [ ] Phase 4+: Combat system, content ingestion, GM controls, premium polish.
+
+⸻
+
+**🔜 Roadmap**
+
+* Add /sheet CRUD with strict JSON schema.
+* Initiative + combat encounters with Redis turn locks.
+* Adventure ingestion pipeline for SRD or custom campaigns.
+* Optional Embedded App for lightweight maps/handouts in voice channels.
+
+——-
+
 ## Prerequisites
 
 - Bash-like environment
