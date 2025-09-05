@@ -29,7 +29,7 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 * Initiative and turn management with audit logging.
 * Campaign persistence
 * JSON-schema character sheets stored in Postgres (or SQLite for dev).
-* Adventure content as structured “nodes” (locations, NPCs, encounters).
+* Adventure content as structured "nodes" (locations, NPCs, encounters).
 * Automatic transcripts and neutral session summaries.
 * AI-assisted narration (behind feature flag)
 * LLM proposes DCs and narrates outcomes; Rules Service enforces mechanics.
@@ -82,34 +82,34 @@ flowchart TD
   TEST[Tests<br/>pytest & hypothesis]:::ops
 
   %% === Flows ===
-  U —>|Slash command| DP
-  DP —>|POST /interactions<br/>signed| CF
-  CF —> A
+  U -->|Slash command| DP
+  DP -->|POST /interactions<br/>signed| CF
+  CF --> A
 
-  A —> SIG
-  SIG —>|valid| DISP
+  A --> SIG
+  SIG -->|valid| DISP
   A -.->|invalid| RESP
 
   %% Phase 0: immediate defer
-  DISP —> RESP
+  DISP --> RESP
 
   %% Phase 1: deterministic mechanics
-  DISP —> RULES
-  RULES —> RESP
+  DISP --> RULES
+  RULES --> RESP
 
   %% Phase 2: persistence & context
-  DISP —> CTX
-  CTX —> DB
-  RESP —>|write bot output| TRANS
-  TRANS —> DB
+  DISP --> CTX
+  CTX --> DB
+  RESP -->|write bot output| TRANS
+  TRANS --> DB
 
   %% Follow-up delivery
-  RESP —>|POST follow-up| WH
-  WH —> DP —> U
+  RESP -->|POST follow-up| WH
+  WH --> DP --> U
 
   %% Tooling edges
-  REG —> DP
-  MIG —> DB
+  REG --> DP
+  MIG --> DB
   TEST -.-> RULES
   TEST -.-> A
   LOG -.-> APP
@@ -172,7 +172,7 @@ flowchart TD
 ## Quickstart
 
 ```bash
-cp .env.example .env    # <— Add secrets
+cp .env.example .env    # <-- Add secrets
 make dev                # Install Python requirements
 make run                # Start local dev server on 18000
 ```
@@ -238,6 +238,3 @@ Discord can now reach your dev server using that URL + `/interactions`.
 * Everything behind feature flags. Roll forward/Rollback without deploy.
 * Shadow first. New subsystems run in observation mode before taking action.
 * Write once, test twice. Unit+property tests for math; golden logs for flows.
-
- 
-
