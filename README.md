@@ -75,20 +75,49 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 ## Prerequisites
 
 - Bash-like environment
-- Python > 3.10
-- [uv](https://formulae.brew.sh/formula/uv)
-- [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
 - Docker
+- Python > 3.10
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+
+    ```bash
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    ```
+
+- [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
+
+    ```bash
+    # Linux
+    wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm
+    sudo cp ./cloudflared-linux-arm /usr/local/bin/cloudflared
+    sudo chmod +x /usr/local/bin/cloudflared
+    cloudflared -v
+
+    # MacOS
+    brew install cloudflared
+    ```
 
 ## Quickstart
 
 ```bash
-cp .env.example .env  # <— Add secrets
-make dev
-make run
+cp .env.example .env    # <— Add secrets
+make dev                # Install Python requirements
+make run                # Start local dev server on 18000
 ```
 
----
+### Optional: Anonymous Cloudflare tunnel:
+
+```bash
+make tunnel
+```
+
+In the output, you should see something like:
+
+    ```
+    2025-09-05T18:57:54Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+    2025-09-05T18:57:54Z INF |  https://rooms-mechanics-tires-mats.trycloudflare.com  
+    ---
+
+Discord can now reach your dev server using that URL + `/interactions`.
 
 ## Repo Structure
 
