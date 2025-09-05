@@ -48,6 +48,7 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 * Optional LLM → narrates and proposes rulings, never mutates state directly.
 * Workers → long-running tasks: narration, summarization, content ingestion.
  
+**Diagram: High-Level Architecture**
 
 ```mermaid
 flowchart TD
@@ -118,7 +119,46 @@ flowchart TD
   classDef ext  fill:#eef7ff,stroke:#4e89ff,stroke-width:1px,color:#0d2b6b
   classDef edge fill:#efeaff,stroke:#8b5cf6,stroke-width:1px,color:#2b1b6b
   classDef data fill:#fff7e6,stroke:#f59e0b,stroke-width:1px,color:#7c3e00
-  classDef ops  fill:#eefaf0,stroke:#10b981,stroke-width:1px,color:#065f46
+  classDef ops  fill:#eefaf0,stroke:#10b981,stroke-width:1px,color:#065f46 
+```
+
+**Diagram: Interaction Lifecycle (Phase 0-2)**
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant User as Player (Discord)
+  participant Discord as Discord Platform
+  participant CF as cloudflared Tunnel
+  participant API as Adventurator /interactions
+  participant SIG as Ed25519 Verify
+  participant DISP as Dispatcher
+  participant RULES as Rules Engine
+  participant CTX as Context Resolver
+  participant DB as Database
+  participant WH as Discord Webhooks
+
+  User->>Discord: /roll expr:2d6+3
+  Discord->>CF: POST /interactions (signed)
+  CF->>API: Forward request
+  API->>SIG: Verify signature
+  SIG-->>API: OK (or 401 if bad)
+
+  API-->>Discord: Defer (type=5) ≤3s
+
+  API->>DISP: route command ("roll")
+  DISP->>RULES: parse & roll (deterministic)
+  RULES-->>DISP: result (rolls, total)
+
+  %% Phase 2 logging & context (optional for Phase 0/1)
+  DISP->>CTX: resolve campaign/player/scene
+  CTX->>DB: upsert/get rows
+  DISP->>DB: write transcript (player input)
+  DISP->>DB: write transcript (bot output meta)
+
+  DISP->>WH: POST follow-up message (narration + mechanics)
+  WH-->>Discord: deliver message
+  Discord-->>User: Show result
 ```
 
 **🔒 Design philosophy**
