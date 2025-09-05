@@ -53,37 +53,37 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 flowchart TD
   %% === External ===
   U[Player on Discord]:::ext
-  DP[Discord Platform<br/>App Commands & Interactions]:::ext
-  WH[Discord Webhooks API<br/>Follow-up Messages]:::ext
+  DP[Discord Platform<br>App Commands and Interactions]:::ext
+  WH[Discord Webhooks API<br>Follow-up Messages]:::ext
 
   %% === Network Edge ===
-  CF[cloudflared Tunnel<br/>TLS (trusted CA)]:::edge
+  CF[cloudflared Tunnel<br>TLS - trusted CA]:::edge
 
   %% === App ===
-  subgraph APP[Adventurator Service (FastAPI)]
-    A[Interactions Endpoint<br/>(/interactions)]
-    SIG[Ed25519 Verify<br/>(X-Signature-* Headers)]
+  subgraph APP[Adventurator Service - FastAPI]
+    A[Interactions Endpoint<br>path: /interactions]
+    SIG[Ed25519 Verify<br>X-Signature-* headers]
     DISP[Command Dispatcher]
-    RESP[Responder<br/>defer & follow-up]
-    RULES[Rules Engine (Phase 1)<br/>Dice, Checks, Adv/Dis]
-    CTX[Context Resolver (Phase 2)<br/>Campaign, Player, Scene]
-    TRANS[Transcript Logger (Phase 2)]
+    RESP[Responder<br>defer and follow-up]
+    RULES[Rules Engine - Phase 1<br>Dice, Checks, Adv/Dis]
+    CTX[Context Resolver - Phase 2<br>Campaign, Player, Scene]
+    TRANS[Transcript Logger - Phase 2]
   end
 
   %% === Data ===
   subgraph DATA[Data Layer]
-    DB[(Postgres/SQLite)<br/>campaigns, players, characters, scenes, transcripts]:::data
+    DB[(Postgres or SQLite)<br>campaigns, players, characters, scenes, transcripts]:::data
     MIG[Alembic Migrations]:::ops
   end
 
   %% === Tooling ===
-  REG[scripts/register_commands.py<br/>Guild command registration]:::ops
-  LOG[Structured Logs<br/>structlog/orjson]:::ops
-  TEST[Tests<br/>pytest & hypothesis]:::ops
+  REG[scripts/register_commands.py<br>Guild command registration]:::ops
+  LOG[Structured Logs<br>structlog and orjson]:::ops
+  TEST[Tests<br>pytest and hypothesis]:::ops
 
   %% === Flows ===
   U -->|Slash command| DP
-  DP -->|POST /interactions<br/>signed| CF
+  DP -->|POST /interactions<br>signed| CF
   CF --> A
 
   A --> SIG
@@ -97,7 +97,7 @@ flowchart TD
   DISP --> RULES
   RULES --> RESP
 
-  %% Phase 2: persistence & context
+  %% Phase 2: persistence and context
   DISP --> CTX
   CTX --> DB
   RESP -->|write bot output| TRANS
