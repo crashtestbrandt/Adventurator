@@ -4,6 +4,8 @@
 
 A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in chat. It blends deterministic game mechanics with AI-powered narration, letting players experience a text-based campaign without needing a human DM online 24/7.
 
+![](/docs/images/usage-slash-check.jpeg)
+
 ---
 
 - [Repo Structure](#repo-structure)
