@@ -1,8 +1,15 @@
 # Adventurator
 
+## Prerequisites
+
+- Bash-like environment
+- Python > 3.10
+- [uv](https://formulae.brew.sh/formula/uv)
+
 ## Quickstart
 
 ```bash
+make uv venv
 cp .env.example .env  # put your actual DISCORD_PUBLIC_KEY
 make run
 ```
