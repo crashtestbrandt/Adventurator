@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     features_rules: bool = False
     features_combat: bool = False
     response_timeout_seconds: int = 3
+    
+    llm_api_url: str
+    #llm_api_url: str = "http://localhost:11434/api/chat"
+    llm_model_name: str = "llama3:8b"
+    llm_default_system_prompt: str = "You are a helpful assistant."
 
     model_config = SettingsConfigDict(env_prefix="", case_sensitive=False, env_file=".env", extra="ignore")
 
@@ -29,5 +34,8 @@ def load_settings() -> Settings:
                 "features_rules": t.get("features", {}).get("rules", False),
                 "features_combat": t.get("features", {}).get("combat", False),
                 "response_timeout_seconds": t.get("discord", {}).get("response_timeout_seconds", 3),
+                "llm_api_url": t.get("llm", {}).get("api_url"),
+                "llm_model_name": t.get("llm", {}).get("model_name"),
+                "llm_default_system_prompt": t.get("llm", {}).get("default_system_prompt"),
             })
     return Settings(**data)  # .env overrides TOML

@@ -6,6 +6,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from Adventorator import models
 from Adventorator.schemas import CharacterSheet
+from typing import List
 
 async def get_or_create_campaign(s: AsyncSession, guild_id: int, name: str="Default") -> models.Campaign:
     q = await s.execute(select(models.Campaign).where(models.Campaign.guild_id == guild_id))
@@ -74,3 +75,20 @@ async def write_transcript(s: AsyncSession, campaign_id: int, scene_id: int | No
     )
     s.add(t)
     await s.flush()
+
+async def get_recent_transcripts(
+    s: AsyncSession, scene_id: int, limit: int = 15
+) -> List[models.Transcript]:
+    """
+    Fetches the most recent transcript entries for a given scene, in chronological order.
+    """
+    q = await s.execute(
+        select(models.Transcript)
+        .where(models.Transcript.scene_id == scene_id)
+        .order_by(models.Transcript.created_at.desc())
+        .limit(limit)
+    )
+    # The query gets them in reverse-chronological order, so we reverse the list
+    # to get them back into the correct conversational order for the prompt.
+    results = q.scalars().all()
+    return results[::-1]

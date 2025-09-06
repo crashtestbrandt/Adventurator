@@ -14,6 +14,7 @@ from Adventorator import repos
 import structlog
 import asyncio
 import json
+from Adventorator.llm import LLMClient
 
 rng = DiceRNG()  # TODO: Seed per-scene later
 
@@ -21,6 +22,16 @@ log = structlog.get_logger()
 settings = load_settings()
 setup_logging()
 app = FastAPI(title="Adventorator")
+
+llm_client = None
+if settings.features_llm:
+    llm_client = LLMClient(settings)
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    if llm_client:
+        await llm_client.close()
 
 DISCORD_SIG_HEADER = "X-Signature-Ed25519"
 DISCORD_TS_HEADER = "X-Signature-Timestamp"
@@ -140,8 +151,52 @@ async def _dispatch_command(inter: Interaction):
             f"= **{out.total}** → {verdict}"
         )
         await followup_message(inter.application_id, inter.token, text)
+    elif name == "ooc":
+        if not settings.features_llm or not llm_client:
+            await followup_message(inter.application_id, inter.token, "❌ The LLM narrator is currently disabled.", ephemeral=True)
+            return
+        
+        message = _option(inter, "message")
+        if not message:
+            await followup_message(inter.application_id, inter.token, "❌ You need to provide a message.", ephemeral=True)
+            return
+
+        guild_id, channel_id, user_id, username = _infer_ids_from_interaction(inter)
+
+        async with session_scope() as s:
+            campaign = await repos.get_or_create_campaign(s, guild_id)
+            scene = await repos.ensure_scene(s, campaign.id, channel_id)
+
+            # 1. Write the player's message to the transcript immediately
+            await repos.write_transcript(s, campaign.id, scene.id, channel_id, "player", message, str(user_id))
+
+            # 2. Fetch recent history for context
+            history = await repos.get_recent_transcripts(s, scene.id, limit=15)
+            
+            # 3. Format history for the LLM prompt
+            prompt_messages = []
+            for entry in history:
+                # Map our author types to LLM roles
+                role = "user" if entry.author == "player" else "assistant" if entry.author == "bot" else None
+                if role:
+                    prompt_messages.append({"role": role, "content": entry.content})
+            
+            # 4. Call the LLM to get a narrative response
+            log.info("Generating LLM response", scene_id=scene.id, history_len=len(prompt_messages))
+            llm_response = await llm_client.generate_response(prompt_messages)
+
+            if not llm_response:
+                # The LLM client already logs errors, just inform the user.
+                await followup_message(inter.application_id, inter.token, "The narrator is silent. (No response from LLM)", ephemeral=True)
+                return
+            
+            # 5. Send the LLM's response to the Discord channel
+            await followup_message(inter.application_id, inter.token, llm_response)
+
+            # 6. Write the LLM's response to the transcript to complete the loop
+            await repos.write_transcript(s, campaign.id, scene.id, channel_id, "bot", llm_response)
     else:
-        await followup_message(inter.application_id, inter.token, f"Unknown command: {name}", ephemeral=True)
+        await followup_message(inter.application_id, inter.token, f"Unknown commandz: {name}", ephemeral=True)
 
 def _subcommand(inter: Interaction) -> str | None:
     # options[0].name for SUB_COMMAND

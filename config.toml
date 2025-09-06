@@ -3,9 +3,14 @@ name = "Adventorator"
 env = "dev"
 
 [features]
-llm = false
+llm = true
 rules = false
 combat = false
 
 [discord]
 response_timeout_seconds = 3
+
+[llm]
+api_url = "http://localhost:8901/api/chat"  # Ollama's default chat endpoint
+model_name = "gemma3:4b-it-q8_0" # Or any model you have, e.g., "qwen2:7b"
+default_system_prompt = "You are a fantasy RPG narrator. Describe scenes and outcomes in a captivating, third-person-limited style. Be concise. Do not make decisions for the players or speak for them. Your responses should be pure narration."
