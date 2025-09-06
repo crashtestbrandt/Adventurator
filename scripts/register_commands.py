@@ -9,10 +9,6 @@ APP_ID = os.environ["DISCORD_APP_ID"]
 BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
 GUILD_ID = os.environ.get("DISCORD_GUILD_ID")
 
-APP_ID = os.environ["DISCORD_APP_ID"]
-BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
-GUILD_ID = os.environ["DISCORD_GUILD_ID"]  # Test server
-
 commands = [
     {
       "name": "roll",
@@ -40,7 +36,8 @@ commands = [
 ]
 
 async def main():
-    url = f"https://discord.com/api/v10/applications/{APP_ID}/guilds/{GUILD_ID}/commands"
+#    url = f"https://discord.com/api/v10/applications/{APP_ID}/guilds/{GUILD_ID}/commands"
+    url = f"https://discord.com/api/v10/applications/{APP_ID}/commands"
     headers = {"Authorization": f"Bot {BOT_TOKEN}", "Content-Type": "application/json"}
     async with httpx.AsyncClient(timeout=10) as client:
         for cmd in commands:
