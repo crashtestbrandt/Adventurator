@@ -125,11 +125,12 @@ This guide will walk you through how to safely collaborate on this repository us
 	   * Once approved and checks pass, Squash & Merge into main.
 
 6. Best Practices
-  * One branch = one task. Don’t mix unrelated changes.
-  * Write meaningful commit messages.
-  * Run tests and lint before pushing.
-  * Never commit secrets (API keys, passwords, tokens).
-  * Ask questions early--better to clarify than guess.
+
+    * One branch = one task. Don’t mix unrelated changes.
+    * Write meaningful commit messages.
+    * Run tests and lint before pushing.
+    * Never commit secrets (API keys, passwords, tokens).
+    * Ask questions early--better to clarify than guess.
 
 7. Common Commands Cheat Sheet
 
@@ -140,7 +141,7 @@ This guide will walk you through how to safely collaborate on this repository us
 | Switch branch | `git checkout branch-name` |
 | See status |	`git status` |
 | Stage file	| `git add file.py` |
-| Commit staged changes	| `git commit -m "message"` |
+| Commit staged changes | `git commit -m "message"` |
 | Pull latest main |	`git pull origin main` |
 | Merge main into branch |	`git merge main` |
 | Push branch to GitHub	| `git push -u origin feature/thing` |
