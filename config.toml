@@ -1,5 +1,5 @@
 [app]
-name = "Adventurator"
+name = "Adventorator"
 env = "dev"
 
 [features]

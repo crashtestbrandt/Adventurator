@@ -1,4 +1,4 @@
-# Adventurator
+# Adventorator
 
 *Dungeon Master as a Service (DMaaS)*
 
@@ -61,7 +61,7 @@ flowchart TD
   CF[cloudflared Tunnel<br/>TLS - trusted CA]:::edge
 
   %% === App ===
-  subgraph APP[Adventurator Service - FastAPI]
+  subgraph APP[Adventorator Service - FastAPI]
     A[Interactions Endpoint<br/>path: /interactions]
     SIG[Ed25519 Verify<br/>X-Signature-* headers]
     DISP[Command Dispatcher]
@@ -130,7 +130,7 @@ sequenceDiagram
   participant User as Player (Discord)
   participant Discord as Discord Platform
   participant CF as cloudflared Tunnel
-  participant API as Adventurator /interactions
+  participant API as Adventorator /interactions
   participant SIG as Ed25519 Verify
   participant DISP as Dispatcher
   participant RULES as Rules Engine
@@ -245,7 +245,7 @@ Discord can now reach your dev server using that URL + `/interactions`.
 ├── scripts
 │   └── register_commands.py
 ├── src
-│   └── Adventurator
+│   └── Adventorator
 │       ├── app.py
 │       ├── config.py
 │       ├── crypto.py

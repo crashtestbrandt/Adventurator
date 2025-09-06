@@ -1,4 +1,4 @@
-# Contributing to Adventurator
+# Contributing to Adventorator
 
 Welcome! 🎲
 This guide will walk you through how to safely collaborate on this repository using Git and GitHub.
@@ -15,8 +15,8 @@ This guide will walk you through how to safely collaborate on this repository us
 2. **Clone the repository**
 
    ```bash
-   git clone https://github.com/crashtestbrandt/Adventurator.git
-   cd Adventurator
+   git clone https://github.com/crashtestbrandt/Adventorator.git
+   cd Adventorator
    ```
 
 3. **Set your Git identity** (only once on your machine):
@@ -53,7 +53,7 @@ Examples:
 
 ## 3. Making Changes
 
-1. **Edit files** in `src/Adventurator/` or other folders.
+1. **Edit files** in `src/Adventorator/` or other folders.
 
 2. **Check your changes locally**:
 

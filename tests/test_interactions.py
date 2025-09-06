@@ -2,7 +2,7 @@
 
 import json
 from fastapi.testclient import TestClient
-from Adventurator.app import app
+from Adventorator.app import app
 
 client = TestClient(app)
 

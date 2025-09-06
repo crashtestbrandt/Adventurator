@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from sqlalchemy import String, Integer, ForeignKey, JSON, BigInteger, Index, Boolean, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from Adventurator.db import Base
+from Adventorator.db import Base
 
 class Campaign(Base):
     __tablename__ = "campaigns"

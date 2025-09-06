@@ -8,7 +8,7 @@ dev:
 	. .venv/bin/activate && uv pip install -r requirements.txt
 
 run:
-	. .venv/bin/activate && UVICORN_LOG_LEVEL=info uvicorn --app-dir src Adventurator.app:app --reload --host 0.0.0.0 --port 18000
+	. .venv/bin/activate && UVICORN_LOG_LEVEL=info uvicorn --app-dir src Adventorator.app:app --reload --host 0.0.0.0 --port 18000
 
 tunnel:
 	cloudflared tunnel --url http://127.0.0.1:8000
@@ -29,8 +29,8 @@ clean:
 	rm -rf .venv
 
 db-up:
-	docker run --rm -d --name advdb -e POSTGRES_PASSWORD=adventurator \
-		-e POSTGRES_USER=adventurator -e POSTGRES_DB=adventurator \
+	docker run --rm -d --name advdb -e POSTGRES_PASSWORD=adventorator \
+		-e POSTGRES_USER=adventorator -e POSTGRES_DB=adventorator \
 		-p 5432:5432 postgres:16
 
 alembic-init:

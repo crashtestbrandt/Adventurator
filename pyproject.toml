@@ -1,5 +1,5 @@
 [project]
-name = "Adventurator"
+name = "Adventorator"
 version = "0.0.1"
 requires-python = ">=3.10"
 dependencies = []
@@ -9,5 +9,5 @@ line-length = 100
 select = ["E","F","I","UP","N","B"]
 
 [tool.pytest.ini_options]
-addopts = "-q --cov=src/Adventurator --cov-report=term-missing"
+addopts = "-q --cov=src/Adventorator --cov-report=term-missing"
 testpaths = ["tests"]

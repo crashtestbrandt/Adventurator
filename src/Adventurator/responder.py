@@ -2,8 +2,8 @@
 
 from fastapi import Response
 import httpx
-from Adventurator.discord_schemas import DeferResponse, PongResponse
-from Adventurator.config import load_settings
+from Adventorator.discord_schemas import DeferResponse, PongResponse
+from Adventorator.config import load_settings
 import orjson
 
 _settings = load_settings()

@@ -1,13 +1,13 @@
 # app.py
 
 from fastapi import FastAPI, Request, HTTPException
-from Adventurator.logging import setup_logging
-from Adventurator.config import load_settings
-from Adventurator.crypto import verify_ed25519
-from Adventurator.discord_schemas import Interaction
-from Adventurator.responder import respond_pong, respond_deferred, followup_message
-from Adventurator.rules.dice import DiceRNG
-from Adventurator.rules.checks import CheckInput, compute_check
+from Adventorator.logging import setup_logging
+from Adventorator.config import load_settings
+from Adventorator.crypto import verify_ed25519
+from Adventorator.discord_schemas import Interaction
+from Adventorator.responder import respond_pong, respond_deferred, followup_message
+from Adventorator.rules.dice import DiceRNG
+from Adventorator.rules.checks import CheckInput, compute_check
 import structlog
 import asyncio
 
@@ -16,7 +16,7 @@ rng = DiceRNG()  # TODO: Seed per-scene later
 log = structlog.get_logger()
 settings = load_settings()
 setup_logging()
-app = FastAPI(title="Adventurator")
+app = FastAPI(title="Adventorator")
 
 DISCORD_SIG_HEADER = "X-Signature-Ed25519"
 DISCORD_TS_HEADER = "X-Signature-Timestamp"
