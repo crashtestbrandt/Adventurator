@@ -7,6 +7,7 @@ from pathlib import Path
 
 class Settings(BaseSettings):
     env: str = Field(default="dev")
+    database_url: str = Field(default="sqlite:///./adventurator.sqlite3")
     discord_public_key: str
     discord_bot_token: str | None = None
     features_llm: bool = False
