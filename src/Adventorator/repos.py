@@ -6,6 +6,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from Adventorator import models
 from Adventorator.schemas import CharacterSheet
+from typing import List
 
 async def get_or_create_campaign(s: AsyncSession, guild_id: int, name: str="Default") -> models.Campaign:
     q = await s.execute(select(models.Campaign).where(models.Campaign.guild_id == guild_id))
@@ -65,12 +66,33 @@ async def ensure_scene(s: AsyncSession, campaign_id: int, channel_id: int) -> mo
     await s.flush()
     return sc
 
-async def write_transcript(s: AsyncSession, campaign_id: int, scene_id: int | None,
-                           channel_id: int | None, author: str, content: str,
-                           author_ref: str | None = None, meta: dict | None = None):
+async def write_transcript(
+        s: AsyncSession, 
+        campaign_id: int, 
+        scene_id: int | None,
+        channel_id: int | None, 
+        author: str, 
+        content: str,
+        author_ref: str | None = None, 
+        meta: dict | None = None
+        ):
     t = models.Transcript(
         campaign_id=campaign_id, scene_id=scene_id, channel_id=channel_id,
         author=author, author_ref=author_ref, content=content, meta=meta or {}
     )
     s.add(t)
     await s.flush()
+
+async def get_recent_transcripts(
+    s: AsyncSession, scene_id: int, limit: int = 15, user_id: str | None = None
+) -> List[models.Transcript]:
+    """
+    Fetches the most recent transcript entries for a given scene, optionally filtered by user_id, in chronological order.
+    """
+    stmt = select(models.Transcript).where(models.Transcript.scene_id == scene_id)
+    if user_id is not None:
+        stmt = stmt.where(models.Transcript.author_ref == user_id)
+    stmt = stmt.order_by(models.Transcript.created_at.desc()).limit(limit)
+    q = await s.execute(stmt)
+    results = q.scalars().all()
+    return results[::-1]

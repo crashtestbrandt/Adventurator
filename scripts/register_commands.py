@@ -3,11 +3,29 @@
 import httpx, os, orjson, sys
 
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
-APP_ID = os.environ["DISCORD_APP_ID"]
-BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
-GUILD_ID = os.environ.get("DISCORD_GUILD_ID")
+# Load environment variables from the project root .env file
+project_root = Path(__file__).parent.parent  # TODO: this sucks, replace this with something better
+env_path = project_root / ".env"
+
+if not env_path.exists():
+    print(f"Error: .env file not found at {env_path}")
+    sys.exit(1)
+load_dotenv(dotenv_path=env_path)
+
+# Fetch required environment variables with error handling
+try:
+    APP_ID = os.environ["DISCORD_APP_ID"]
+    BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
+except KeyError as e:
+    print(f"Error: Missing required environment variable: {e}")
+    print(f"Path of .env file: {env_path}")
+    print(f"contents of .env file: {env_path.read_text()}")
+    sys.exit(1)
+
+# Fetch optional environment variables with a default fallback
+GUILD_ID = os.environ.get("DISCORD_GUILD_ID", None)
 
 commands = [
     {
@@ -54,6 +72,18 @@ commands = [
           ]
         }
       ]
+    },
+    {
+        "name": "ooc",
+        "description": "Speak with the narrator or say something out of character.",
+        "options": [
+            {
+                "type": 3,  # STRING
+                "name": "message",
+                "description": "What you want to say or do.",
+                "required": True,
+            }
+        ]
     }
 ]
 
@@ -64,10 +94,12 @@ async def main():
     async with httpx.AsyncClient(timeout=10) as client:
         for cmd in commands:
             r = await client.post(url, headers=headers, content=orjson.dumps(cmd))
-            r.raise_for_status()
-            print("Registered:", r.json()["name"])
+            if r.status_code == 201 or r.status_code == 200:
+                print("Registered:", r.json().get("name", "<unknown>"), "status code: ", r.status_code)
+            else:
+                print(f"Failed to register command '{cmd.get('name', '<unknown>')}'. Status: {r.status_code}")
+                print("Response:", r.text)
 
 if __name__ == "__main__":
     import asyncio
-    print("AIcat!")
     asyncio.run(main())
