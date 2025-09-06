@@ -197,7 +197,7 @@ async def _dispatch_command(inter: Interaction):
             # 6. Write the LLM's response to the transcript to complete the loop
             await repos.write_transcript(s, campaign.id, scene.id, channel_id, "bot", llm_response, str(user_id))
     else:
-        await followup_message(inter.application_id, inter.token, f"Unknown commandz: {name}", ephemeral=True)
+        await followup_message(inter.application_id, inter.token, f"Unknown command: {name}", ephemeral=True)
 
 def _subcommand(inter: Interaction) -> str | None:
     # options[0].name for SUB_COMMAND
