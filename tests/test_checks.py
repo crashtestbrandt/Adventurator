@@ -1,6 +1,6 @@
 # test_checks.py
 
-from Adventurator.rules.checks import CheckInput, compute_check, ability_mod
+from Adventorator.rules.checks import CheckInput, compute_check, ability_mod
 
 def test_mods():
     assert ability_mod(10) == 0

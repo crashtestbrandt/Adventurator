@@ -1,7 +1,7 @@
 # test_advantage.py
 
 from hypothesis import given, strategies as st
-from Adventurator.rules.dice import DiceRNG
+from Adventorator.rules.dice import DiceRNG
 
 @given(st.integers(min_value=0, max_value=1_000_000))
 def test_advantage_picks_higher(seed):

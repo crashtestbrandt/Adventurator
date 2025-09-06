@@ -1,4 +1,4 @@
-# scripts/register_commands.py
+#!/usr/bin/env python3
 
 import httpx, os, orjson, sys
 
@@ -8,10 +8,6 @@ load_dotenv()
 APP_ID = os.environ["DISCORD_APP_ID"]
 BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
 GUILD_ID = os.environ.get("DISCORD_GUILD_ID")
-
-APP_ID = os.environ["DISCORD_APP_ID"]
-BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
-GUILD_ID = os.environ["DISCORD_GUILD_ID"]  # Test server
 
 commands = [
     {
@@ -36,11 +32,34 @@ commands = [
         {"name": "advantage", "description":"Advantage", "type":5, "required":False},
         {"name": "disadvantage", "description":"Disadvantage", "type":5, "required":False},
       ]
+    },
+    {
+      "name": "sheet",
+      "description": "Character sheet operations",
+      "options": [
+        {
+          "name": "create",
+          "description": "Create or update a sheet from JSON",
+          "type": 1,  # SUB_COMMAND
+          "options": [
+            {"name":"json","description":"JSON sheet payload","type":3,"required":True}
+          ]
+        },
+        {
+          "name": "show",
+          "description": "Show a sheet by name",
+          "type": 1,
+          "options": [
+            {"name":"name","description":"Character name","type":3,"required":True}
+          ]
+        }
+      ]
     }
 ]
 
 async def main():
-    url = f"https://discord.com/api/v10/applications/{APP_ID}/guilds/{GUILD_ID}/commands"
+#    url = f"https://discord.com/api/v10/applications/{APP_ID}/guilds/{GUILD_ID}/commands"
+    url = f"https://discord.com/api/v10/applications/{APP_ID}/commands"
     headers = {"Authorization": f"Bot {BOT_TOKEN}", "Content-Type": "application/json"}
     async with httpx.AsyncClient(timeout=10) as client:
         for cmd in commands:
@@ -50,4 +69,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+    print("AIcat!")
     asyncio.run(main())

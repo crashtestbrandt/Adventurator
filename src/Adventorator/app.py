@@ -1,0 +1,193 @@
+# app.py
+
+from fastapi import FastAPI, Request, HTTPException
+from Adventorator.logging import setup_logging
+from Adventorator.config import load_settings
+from Adventorator.crypto import verify_ed25519
+from Adventorator.discord_schemas import Interaction
+from Adventorator.responder import respond_pong, respond_deferred, followup_message
+from Adventorator.rules.dice import DiceRNG
+from Adventorator.rules.checks import CheckInput, compute_check
+from Adventorator.db import session_scope
+from Adventorator.schemas import CharacterSheet
+from Adventorator import repos
+import structlog
+import asyncio
+import json
+
+rng = DiceRNG()  # TODO: Seed per-scene later
+
+log = structlog.get_logger()
+settings = load_settings()
+setup_logging()
+app = FastAPI(title="Adventorator")
+
+DISCORD_SIG_HEADER = "X-Signature-Ed25519"
+DISCORD_TS_HEADER = "X-Signature-Timestamp"
+
+@app.post("/interactions")
+async def interactions(request: Request):
+    raw = await request.body()
+    sig = request.headers.get(DISCORD_SIG_HEADER)
+    ts  = request.headers.get(DISCORD_TS_HEADER)
+    if not sig or not ts:
+        raise HTTPException(status_code=401, detail="missing signature headers")
+
+    if not verify_ed25519(settings.discord_public_key, ts, raw, sig):
+        raise HTTPException(status_code=401, detail="bad signature")
+
+    inter = Interaction.model_validate_json(raw)
+
+    async with session_scope() as s:
+        guild_id, channel_id, user_id, username = _infer_ids_from_interaction(inter)
+        campaign = await repos.get_or_create_campaign(s, guild_id)
+        scene = await repos.ensure_scene(s, campaign.id, channel_id)
+        # Content can be reconstructed from command name/options; store a compact form:
+        msg = f"/{inter.data.name}" if inter.data and inter.data.name else "<interaction>"
+        await repos.write_transcript(s, campaign.id, scene.id, channel_id, "player", msg, str(user_id), meta=inter.model_dump())
+
+    # Ping = 1
+    if inter.type == 1:
+        return respond_pong()
+
+    # Anything else: immediately DEFER (type 5) to satisfy the 3s budget.
+
+    if inter.type == 2 and inter.data and inter.data.name:
+        asyncio.create_task(_dispatch_command(inter))
+    return respond_deferred()
+
+async def _dispatch_command(inter: Interaction):
+    name = inter.data.name
+
+    if name == "sheet":
+        sub = _subcommand(inter)
+        if sub == "create":
+            raw = _option(inter, "json")
+            if raw is None or len(raw) > 16_000:
+                await followup_message(inter.application_id, inter.token, "❌ JSON missing or too large (16KB max).", ephemeral=True)
+                return
+            try:
+                payload = json.loads(raw)
+                sheet = CharacterSheet.model_validate(payload)
+            except Exception as e:
+                await followup_message(inter.application_id, inter.token, f"❌ Invalid JSON or schema: {e}", ephemeral=True)
+                return
+
+            # Resolve context (guild/channel/user)
+            guild_id, channel_id, user_id, username = _infer_ids_from_interaction(inter)  # implement this helper
+            async with session_scope() as s:
+                campaign = await repos.get_or_create_campaign(s, guild_id, name="Default")
+                player = await repos.get_or_create_player(s, user_id, username)
+                await repos.ensure_scene(s, campaign.id, channel_id)
+
+                ch = await repos.upsert_character(s, campaign.id, player.id, sheet)
+                await repos.write_transcript(s, campaign.id, None, channel_id, "system", "sheet.create", str(user_id), meta={"name": sheet.name})
+
+            await followup_message(inter.application_id, inter.token, f"✅ Sheet saved for **{sheet.name}**")
+            return
+
+        elif sub == "show":
+            who = _option(inter, "name")
+            guild_id, channel_id, user_id, username = _infer_ids_from_interaction(inter)
+            async with session_scope() as s:
+                campaign = await repos.get_or_create_campaign(s, guild_id)
+                ch = await repos.get_character(s, campaign.id, who)
+                if not ch:
+                    await followup_message(inter.application_id, inter.token, f"❌ No character named **{who}**", ephemeral=True)
+                    return
+                await repos.write_transcript(s, campaign.id, None, channel_id, "system", "sheet.show", str(user_id), meta={"name": who})
+
+            # present a compact summary
+            sheet = ch.sheet
+            summary = (
+                f"**{sheet['name']}** — {sheet['class']} {sheet['level']}\n"
+                f"AC {sheet['ac']} | HP {sheet['hp']['current']}/{sheet['hp']['max']} | "
+                f"STR {sheet['abilities']['STR']} DEX {sheet['abilities']['DEX']} CON {sheet['abilities']['CON']} "
+                f"INT {sheet['abilities']['INT']} WIS {sheet['abilities']['WIS']} CHA {sheet['abilities']['CHA']}"
+            )
+            await followup_message(inter.application_id, inter.token, summary, ephemeral=True)
+            return
+
+    if name == "roll":
+        # expect option "expr"
+        expr = _option(inter, "expr", default="1d20")
+        adv = bool(_option(inter, "advantage", default=False))
+        dis = bool(_option(inter, "disadvantage", default=False))
+        res = rng.roll(expr, advantage=adv, disadvantage=dis)
+        text = f"🎲 `{expr}` → rolls {res.rolls} {'(adv)' if adv else '(dis)' if dis else ''} = **{res.total}**"
+        await followup_message(inter.application_id, inter.token, text)
+    elif name == "check":
+        # options: ability, score, proficient, expertise, prof_bonus, dc, advantage, disadvantage
+        ability = _option(inter, "ability", default="DEX").upper()
+        score = int(_option(inter, "score", default=10))
+        prof = bool(_option(inter, "proficient", default=False))
+        exp  = bool(_option(inter, "expertise", default=False))
+        pb   = int(_option(inter, "prof_bonus", default=2))
+        dc   = int(_option(inter, "dc", default=15))
+        adv  = bool(_option(inter, "advantage", default=False))
+        dis  = bool(_option(inter, "disadvantage", default=False))
+
+        # d20 (1 or 2 rolls depending on adv/dis)
+        res_roll = rng.roll("1d20", advantage=adv, disadvantage=dis)
+        ci = CheckInput(ability=ability, score=score, proficient=prof, expertise=exp,
+                        proficiency_bonus=pb, dc=dc, advantage=adv, disadvantage=dis)
+        out = compute_check(ci, res_roll.rolls[:2] if len(res_roll.rolls) >= 2 else [res_roll.rolls[0]])
+        verdict = "✅ success" if out.success else "❌ fail"
+        text = (
+            f"🧪 **{ability}** check vs DC {dc}\n"
+            f"• d20: {out.d20} → pick {out.pick}\n"
+            f"• mod: {out.mod:+}\n"
+            f"= **{out.total}** → {verdict}"
+        )
+        await followup_message(inter.application_id, inter.token, text)
+    else:
+        await followup_message(inter.application_id, inter.token, f"Unknown command: {name}", ephemeral=True)
+
+def _subcommand(inter: Interaction) -> str | None:
+    # options[0].name for SUB_COMMAND
+    if inter.data and inter.data.options:
+        first = inter.data.options[0]
+        if first.get("type") == 1:
+            return first.get("name")
+    return None
+
+def _option(inter: Interaction, name: str, default=None):
+    # If you’re inside a SUB_COMMAND, options are nested one level deeper
+    opts = inter.data.options or []
+    if opts and isinstance(opts[0], dict) and opts[0].get("type") == 1:
+        opts = opts[0].get("options", [])
+    for opt in opts or []:
+        if opt.get("name") == name:
+            return opt.get("value", default)
+    return default
+
+def _infer_ids_from_interaction(inter):
+    d = inter.model_dump()
+    guild_id   = int(d.get("guild_id") or 0)
+    channel    = d.get("channel") or {}
+    channel_id = int(channel.get("id") or 0)
+    member     = d.get("member") or {}
+    user       = member.get("user") or d.get("user") or {}
+    user_id    = int(user.get("id") or 0)
+    username   = user.get("username") or "Unknown"
+    return guild_id, channel_id, user_id, username
+
+async def _resolve_context(inter: Interaction):
+    guild_id = None
+    channel_id = None
+    user_id = None
+    username = "Unknown"
+
+    # Discord Interaction payloads carry these in different places depending on type.
+    # For slash commands: guild_id & channel_id are in "guild_id"/"channel" fields (add to schemas if needed).
+    # For simplicity here, we assume you extended Interaction to include guild_id/channel.id/user.id
+    # If not, adapt based on your actual payload.
+
+    # TODO: parse from raw JSON fields in your Interaction model if missing.
+
+    async with session_scope() as s:
+        campaign = await repos.get_or_create_campaign(s, guild_id or 0, name="Default")
+        player = await repos.get_or_create_player(s, user_id or 0, username)
+        scene = await repos.ensure_scene(s, campaign.id, channel_id or 0)
+        await repos.write_transcript(s, campaign.id, scene.id, channel_id, "player", "<user message>", str(user_id))
+        return campaign, player, scene

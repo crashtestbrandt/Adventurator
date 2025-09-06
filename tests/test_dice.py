@@ -1,6 +1,6 @@
 # test_dice.py
 
-from Adventurator.rules.dice import DiceRNG
+from Adventorator.rules.dice import DiceRNG
 
 def test_seed_stability():
     rng1 = DiceRNG(seed=42)
