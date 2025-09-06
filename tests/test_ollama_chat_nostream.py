@@ -39,6 +39,8 @@ data, user_prompt = llm.prepare_request_data(
     stream=False, 
     temperature=0.7
 )
+url = llm.url
+headers = {"Content-Type": "application/json"}
 response = requests.post(url, headers=headers, data=json.dumps(data))
 
 # Validate the response structure
