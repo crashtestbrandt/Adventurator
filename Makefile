@@ -6,12 +6,13 @@ uv:
 dev:
 	uv venv || true
 	. .venv/bin/activate && uv pip install -r requirements.txt
+	. uv pip install -e .
 
 run:
 	. .venv/bin/activate && UVICORN_LOG_LEVEL=info uvicorn --app-dir src Adventorator.app:app --reload --host 0.0.0.0 --port 18000
 
 tunnel:
-	cloudflared tunnel --url http://127.0.0.1:8000
+	cloudflared tunnel --url http://127.0.0.1:18000
 
 test:
 	. .venv/bin/activate && pytest

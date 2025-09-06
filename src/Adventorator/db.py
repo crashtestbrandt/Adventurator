@@ -1,5 +1,4 @@
-# db.py
-
+# src/Adventorator/db.py
 from __future__ import annotations
 import contextlib
 from typing import AsyncIterator
@@ -10,9 +9,11 @@ from Adventorator.config import load_settings
 settings = load_settings()
 
 def _normalize_url(url: str) -> str:
-    # Swap sync postgres to async if needed
+    # Upgrade to async drivers if user supplies sync URLs
     if url.startswith("postgresql://"):
         return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("sqlite://") and not url.startswith("sqlite+aiosqlite://"):
+        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
     return url
 
 DATABASE_URL = _normalize_url(settings.database_url)
@@ -26,7 +27,15 @@ _sessionmaker: async_sessionmaker[AsyncSession] | None = None
 def get_engine() -> AsyncEngine:
     global _engine, _sessionmaker
     if _engine is None:
-        _engine = create_async_engine(DATABASE_URL, pool_pre_ping=True, pool_size=5, max_overflow=10)
+        # Safer defaults per backend
+        kwargs = {}
+        if DATABASE_URL.startswith("sqlite+aiosqlite://"):
+            # SQLite ignores pool_size; keep it minimal and avoid pre_ping
+            kwargs.update(connect_args={"timeout": 30})
+        else:
+            kwargs.update(pool_pre_ping=True, pool_size=5, max_overflow=10)
+
+        _engine = create_async_engine(DATABASE_URL, **kwargs)
         _sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
     return _engine
 
