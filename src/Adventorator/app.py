@@ -63,6 +63,9 @@ async def _dispatch_command(inter: Interaction):
         sub = _subcommand(inter)
         if sub == "create":
             raw = _option(inter, "json")
+            if raw is None or len(raw) > 16_000:
+                await followup_message(inter.application_id, inter.token, "❌ JSON missing or too large (16KB max).", ephemeral=True)
+                return
             try:
                 payload = json.loads(raw)
                 sheet = CharacterSheet.model_validate(payload)
@@ -157,6 +160,17 @@ def _option(inter: Interaction, name: str, default=None):
         if opt.get("name") == name:
             return opt.get("value", default)
     return default
+
+def _infer_ids_from_interaction(inter):
+    d = inter.model_dump()
+    guild_id   = int(d.get("guild_id") or 0)
+    channel    = d.get("channel") or {}
+    channel_id = int(channel.get("id") or 0)
+    member     = d.get("member") or {}
+    user       = member.get("user") or d.get("user") or {}
+    user_id    = int(user.get("id") or 0)
+    username   = user.get("username") or "Unknown"
+    return guild_id, channel_id, user_id, username
 
 async def _resolve_context(inter: Interaction):
     guild_id = None

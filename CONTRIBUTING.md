@@ -261,7 +261,7 @@ We use **[Alembic](https://alembic.sqlalchemy.org/)** to manage database schema 
 ### Developer Responsibilities
 
 * **Don’t edit tables by hand.** Always go through Alembic.
-* When you change a model in `src/Adventurator/models.py`:
+* When you change a model in `src/Adventorator/models.py`:
 
   1. Make sure your local DB is running (`make db-up`).
   2. Run:
@@ -283,7 +283,7 @@ We use **[Alembic](https://alembic.sqlalchemy.org/)** to manage database schema 
 * To reset your dev DB completely:
 
   ```bash
-  dropdb adventurator && createdb adventurator
+  dropdb adventorator && createdb adventorator
   make alembic-up
   ```
 
