@@ -11,7 +11,7 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 * [Overview](#overview)
 * [Prerequisites](#prerequisites) & [Quickstart](#quickstart)
 * [Repo Structure](#repo-structure)
-* [Development](#development)
+* [Contributing](./CONTRIBUTING.md)
 
 ---
 
@@ -268,13 +268,3 @@ Discord can now reach your dev server using that URL + `/interactions`.
 ```
 
 ---
-
-## Development
-
-**Guiding Principles**
-
-* LLM augments, rules engine rules. All state changes go through deterministic code.
-* Always ack in ≤3s. Immediately defer and finish work off-thread.
-* Everything behind feature flags. Roll forward/Rollback without deploy.
-* Shadow first. New subsystems run in observation mode before taking action.
-* Write once, test twice. Unit+property tests for math; golden logs for flows.
