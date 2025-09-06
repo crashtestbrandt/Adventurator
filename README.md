@@ -10,6 +10,7 @@ A Discord-native Dungeon Master bot that runs tabletop RPG campaigns directly in
 
 * [Overview](#overview)
 * [Prerequisites](#prerequisites) & [Quickstart](#quickstart)
+* [Databases & Alembic](#database--alembic)
 * [Repo Structure](#repo-structure)
 * [Contributing](./CONTRIBUTING.md)
 
@@ -232,39 +233,84 @@ In the output, you should see something like:
 
 Discord can now reach your dev server using that URL + `/interactions`.
 
+---
+
+For your Quickstart, you’ll want to add just enough to get a new dev set up with a database and migrations. Here’s a concise section you can drop in after your `make run` / `make tunnel` steps:
+
+---
+
+## Database & Alembic
+
+Adventorator uses SQLAlchemy with Alembic migrations. You’ll need to initialize your database schema before running commands that hit persistence (Phase 2+).
+
+```bash
+# Create the database (SQLite default, Postgres if DATABASE_URL is set)
+alembic upgrade head
+```
+
+This will apply all migrations in `migrations/versions/` to your database.
+
+Common commands:
+
+```bash
+# Generate a new migration after editing models.py
+alembic revision --autogenerate -m "describe your change"
+
+# Apply latest migrations
+alembic upgrade head
+
+# Roll back one migration
+alembic downgrade -1
+```
+
+By default, `alembic.ini` points at your `DATABASE_URL` (set in `.env` or config).
+For quick local dev you can rely on SQLite (`sqlite+aiosqlite:///./adventurator.sqlite3`), but Postgres is recommended for persistent campaigns.
+
+---
+
+That way, someone can go from `make dev` → `alembic upgrade head` → bot commands writing to DB.
+
+Want me to also give you a **ready-to-paste snippet of alembic.ini edits** to support async Postgres URLs (`postgresql+asyncpg://`), so you don’t need to tweak by hand?
+
+
+---
+
 ## Repo Structure
 
 ```
-├── Dockerfile
-├── LICENSE
-├── Makefile
-├── README.md
-├── config.toml
-├── pyproject.toml
-├── requirements.txt
-├── scripts
-│   └── register_commands.py
-├── src
-│   └── Adventorator
-│       ├── app.py
-│       ├── config.py
-│       ├── crypto.py
-│       ├── discord_schemas.py
-│       ├── logging.py
-│       ├── responder.py
-│       └── rules
-│           ├── __init__.py
-│           ├── checks.py
-│           └── dice.py
-└── tests
-    ├── data
-    │   └── interaction_example.py
-    ├── test_advantage.py
-    ├── test_checks.py
-    ├── test_crypto.py
-    ├── test_dice.py
-    └── test_interactions.py
-    
+.
+├── alembic.ini                  # Alembic config for database migrations
+├── config.toml                  # Project-level config (env, feature flags, etc.)
+├── Dockerfile                   # Container build recipe
+├── docs                         # Documentation assets and guides
+├── Makefile                     # Common dev/test/build commands
+├── migrations                   # Alembic migration scripts
+│   ├── env.py                   # Alembic environment setup
+│   └── versions                 # Generated migration files
+├── pyproject.toml               # Build system and tooling config (ruff, pytest, etc.)
+├── README.md                    # Project overview and usage guide
+├── requirements.txt             # Python dependencies lock list
+├── scripts                      # Utility/CLI scripts
+│   ├── aicat.py                 # Quickly cat combined source files for copying to clipboard
+│   └── register_commands.py     # Registers slash commands with Discord API
+├── src                          # Application source code
+│   └── Adventorator             # Main package
+│       ├── app.py               # FastAPI entrypoint + Discord interactions handler
+│       ├── config.py            # Settings loader (TOML + .env via Pydantic)
+│       ├── crypto.py            # Ed25519 signature verification for Discord
+│       ├── db.py                # Async SQLAlchemy engine/session management
+│       ├── discord_schemas.py   # Pydantic models for Discord interaction payloads
+│       ├── logging.py           # Structlog-based logging setup
+│       ├── models.py            # SQLAlchemy ORM models (Campaign, Player, etc.)
+│       ├── repos.py             # Data access helpers (CRUD, queries, upserts)
+│       ├── responder.py         # Helpers for Discord responses and follow-ups
+│       ├── rules                # Deterministic rules engine (dice, checks)
+│       │   ├── checks.py        # Ability check logic & modifiers
+│       │   └── dice.py          # Dice expression parser and roller
+│       └── schemas.py           # Pydantic schemas (e.g., CharacterSheet)
+└── tests                        # Unit and integration tests
+    ├── conftest.py              # Pytest fixtures (async DB session, etc.)
+    └── data                     # Sample payloads/test data
 ```
 
 ---
