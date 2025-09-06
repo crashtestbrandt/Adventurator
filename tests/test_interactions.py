@@ -7,5 +7,5 @@ from Adventorator.app import app
 client = TestClient(app)
 
 def test_missing_headers_401():
-    r = client.post("/interactions", data=b"{}")
+    r = client.post("/interactions", content=b"{}")
     assert r.status_code == 401
