@@ -54,8 +54,8 @@ async def interactions(request: Request):
         campaign = await repos.get_or_create_campaign(s, guild_id)
         scene = await repos.ensure_scene(s, campaign.id, channel_id)
         # Content can be reconstructed from command name/options; store a compact form:
-        msg = f"/{inter.data.name}" if inter.data and inter.data.name else "<interaction>"
-        await repos.write_transcript(s, campaign.id, scene.id, channel_id, "player", msg, str(user_id), meta=inter.model_dump())
+        # msg = f"/{inter.data.name}" if inter.data and inter.data.name else "<interaction>"
+        # await repos.write_transcript(s, campaign.id, scene.id, channel_id, "player", msg, str(user_id), meta=inter.model_dump())
 
     # Ping = 1
     if inter.type == 1:
@@ -170,8 +170,8 @@ async def _dispatch_command(inter: Interaction):
             # 1. Write the player's message to the transcript immediately
             await repos.write_transcript(s, campaign.id, scene.id, channel_id, "player", message, str(user_id))
 
-            # 2. Fetch recent history for context
-            history = await repos.get_recent_transcripts(s, scene.id, limit=15)
+            # 2. Fetch recent history for context, only from this user
+            history = await repos.get_recent_transcripts(s, scene.id, limit=15, user_id=user_id)
             
             # 3. Format history for the LLM prompt
             prompt_messages = []
@@ -191,10 +191,11 @@ async def _dispatch_command(inter: Interaction):
                 return
             
             # 5. Send the LLM's response to the Discord channel
-            await followup_message(inter.application_id, inter.token, llm_response)
+            formatted_response = f"**{username}:** {message}\n**Response:** {llm_response}"
+            await followup_message(inter.application_id, inter.token, formatted_response)
 
             # 6. Write the LLM's response to the transcript to complete the loop
-            await repos.write_transcript(s, campaign.id, scene.id, channel_id, "bot", llm_response)
+            await repos.write_transcript(s, campaign.id, scene.id, channel_id, "bot", llm_response, str(user_id))
     else:
         await followup_message(inter.application_id, inter.token, f"Unknown commandz: {name}", ephemeral=True)
 
@@ -217,21 +218,19 @@ def _option(inter: Interaction, name: str, default=None):
     return default
 
 def _infer_ids_from_interaction(inter):
-    d = inter.model_dump()
-    guild_id   = int(d.get("guild_id") or 0)
-    channel    = d.get("channel") or {}
-    channel_id = int(channel.get("id") or 0)
-    member     = d.get("member") or {}
-    user       = member.get("user") or d.get("user") or {}
-    user_id    = int(user.get("id") or 0)
-    username   = user.get("username") or "Unknown"
+    guild_id = int(inter.guild.id) if inter.guild else 0
+    channel_id = int(inter.channel.id) if inter.channel else 0
+    user = inter.member.user if inter.member and inter.member.user else None
+    user_id = int(user.id) if user else 0
+    username = user.username if user else "Unknown"
     return guild_id, channel_id, user_id, username
 
 async def _resolve_context(inter: Interaction):
-    guild_id = None
-    channel_id = None
-    user_id = None
-    username = "Unknown"
+    guild_id = int(inter.guild.id) if inter.guild else 0
+    channel_id = int(inter.channel.id) if inter.channel else 0
+    user = inter.member.user if inter.member and inter.member.user else None
+    user_id = int(user.id) if user else 0
+    username = user.username if user else "Unknown"
 
     # Discord Interaction payloads carry these in different places depending on type.
     # For slash commands: guild_id & channel_id are in "guild_id"/"channel" fields (add to schemas if needed).
@@ -241,8 +240,8 @@ async def _resolve_context(inter: Interaction):
     # TODO: parse from raw JSON fields in your Interaction model if missing.
 
     async with session_scope() as s:
-        campaign = await repos.get_or_create_campaign(s, guild_id or 0, name="Default")
-        player = await repos.get_or_create_player(s, user_id or 0, username)
-        scene = await repos.ensure_scene(s, campaign.id, channel_id or 0)
+        campaign = await repos.get_or_create_campaign(s, guild_id, name="Default")
+        player = await repos.get_or_create_player(s, user_id, username)
+        scene = await repos.ensure_scene(s, campaign.id, channel_id)
         await repos.write_transcript(s, campaign.id, scene.id, channel_id, "player", "<user message>", str(user_id))
         return campaign, player, scene
