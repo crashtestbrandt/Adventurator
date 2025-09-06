@@ -235,10 +235,6 @@ Discord can now reach your dev server using that URL + `/interactions`.
 
 ---
 
-For your Quickstart, you’ll want to add just enough to get a new dev set up with a database and migrations. Here’s a concise section you can drop in after your `make run` / `make tunnel` steps:
-
----
-
 ## Database & Alembic
 
 Adventorator uses SQLAlchemy with Alembic migrations. You’ll need to initialize your database schema before running commands that hit persistence (Phase 2+).
@@ -269,9 +265,6 @@ For quick local dev you can rely on SQLite (`sqlite+aiosqlite:///./adventurator.
 ---
 
 That way, someone can go from `make dev` → `alembic upgrade head` → bot commands writing to DB.
-
-Want me to also give you a **ready-to-paste snippet of alembic.ini edits** to support async Postgres URLs (`postgresql+asyncpg://`), so you don’t need to tweak by hand?
-
 
 ---
 
