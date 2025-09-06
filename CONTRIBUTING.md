@@ -10,19 +10,20 @@ This guide will walk you through how to safely collaborate on this repository us
   1.	Install Git
     * Download Git if you don’t already have it.
     * On macOS/Linux, you can also use Homebrew or your package manager.
-	2. Clone the repository
+  
+  2. Clone the repository
 
-	    ```
-        git clone https://github.com/crashtestbrandt/Adventurator.git
-        cd Adventurator
-	    ```
+      ```
+      git clone https://github.com/crashtestbrandt/Adventurator.git
+      cd Adventurator
+	  ```
 
-	3. Set your Git identity (only once on your machine):
+  3. Set your Git identity (only once on your machine):
 	
-	    ```
-        git config --global user.name "Your Name"
-        git config --global user.email "you@example.com"
-        ```
+      ```
+      git config --global user.name "Your Name"
+      git config --global user.email "you@example.com"
+      ```
 
 2. Branching Workflow
 
